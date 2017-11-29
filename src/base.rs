@@ -377,7 +377,36 @@ fn point_mul(point: ([u64; 4], [u64; 4]), num: Vec<bool>) -> (Fr, Fr) {
     (x0, y0)
 }
 
-pub fn encrypt(message:[u64;4],random:[u64;4],address:([u64;4],[u64;4]))->([u64;4],([u64;4],[u64;4])){
+pub fn enc2str(enc:([u64;4],[u64;4],[u64;4]))->String{
+    let mut res = String::with_capacity(96);
+    for i in 0..4{
+        res.push_str(String::from_utf8_lossy(u64to8((enc.0)[i]).as_ref()).as_ref());
+    }
+    for i in 0..4{
+        res.push_str(String::from_utf8_lossy(u64to8((enc.1)[i]).as_ref()).as_ref());
+    }
+    for i in 0..4{
+        res.push_str(String::from_utf8_lossy(u64to8((enc.2)[i]).as_ref()).as_ref());
+    }
+    res
+}
+
+pub fn str2enc(serial:String)->([u64;4],[u64;4],[u64;4]){
+    let enc:([u64;4],[u64;4],[u64;4]) = ([0;4],[0;4],[0;4]);
+    let v:&[u8] = serial.as_ref();
+    for i in 0..4{
+        (enc.0)[i] = u8sto64(&v[i*8..(i+1)*8]);
+    }
+    for i in 4..8{
+        (enc.1)[i-4] = u8sto64(&v[i*8..(i+1)*8]);
+    }
+    for i in 8..12{
+        (enc.2)[i-8] = u8sto64(&v[i*8..(i+1)*8]);
+    }
+    enc
+}
+
+pub fn encrypt(message:[u64;4],random:[u64;4],address:([u64;4],[u64;4]))->([u64;4],[u64;4],[u64;4]){
     let random = Fr::from_serial(random).into_repr().serial();
     let random = {
         let mut v = vec![];
@@ -412,12 +441,12 @@ pub fn encrypt(message:[u64;4],random:[u64;4],address:([u64;4],[u64;4]))->([u64;
         }
     }
 
-    (enc.into_repr().serial(),(x0.into_repr().serial(),y0.into_repr().serial()))
+    (x0.into_repr().serial(),y0.into_repr().serial(),enc.into_repr().serial())
 }
 
-pub fn decrypt(secret: [u64; 4], rp: ([u64; 4], [u64; 4]), sk: Vec<bool>) -> ([u64; 2], [u64; 2]) {
-    let rqx = point_mul(rp, sk).0;
-    let mut message = Fr::from_repr(FrRepr::from_serial(secret)).unwrap();
+pub fn decrypt(secret: ([u64; 4], [u64; 4],[u64; 4]), sk: Vec<bool>) -> ([u64; 2], [u64; 2]) {
+    let rqx = point_mul((secret.0,secret.1), sk).0;
+    let mut message = Fr::from_repr(FrRepr::from_serial(secret.2)).unwrap();
     message.sub_assign(&rqx);
     let message = message.into_repr().serial();
     let va = [message[2], message[3]];

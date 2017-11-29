@@ -186,8 +186,7 @@ pub fn b2c_info(
       (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool),
       ([u64; 6], [u64; 6], bool)),
      [u64; 4],
-     ([u64; 4], [u64; 4]),
-     [u64; 4]),
+     ([u64; 4], [u64; 4], [u64; 4])),
     Error,
 > {
     let rng = &mut thread_rng();
@@ -211,16 +210,14 @@ pub fn b2c_info(
     )?
         .serial();
     let coin = res[0].serial();
-    let rp = (res[1].serial(), res[2].serial());
-    let enc = res[3].serial();
-    Ok((proof, coin, rp, enc))
+    let enc = (res[1].serial(), res[2].serial(),res[3].serial());
+    Ok((proof, coin, enc))
 }
 
 pub fn b2c_verify(
     va: [u64; 2],
     coin: [u64; 4],
-    rp: ([u64; 4], [u64; 4]),
-    enc: [u64; 4],
+    enc: ([u64; 4], [u64; 4],[u64; 4]),
     proof: (([u64; 6], [u64; 6], bool),
             (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool),
             ([u64; 6], [u64; 6], bool)),
@@ -228,9 +225,9 @@ pub fn b2c_verify(
     verify_proof(&b2c_vk()?, &Proof::from_serial(proof), |cs| {
         let coin = Fr::from_repr(FrRepr::from_serial(coin)).unwrap();
         let va = Fr::from_repr(FrRepr([va[0], va[1], 0, 0])).unwrap();
-        let enc = Fr::from_repr(FrRepr::from_serial(enc)).unwrap();
-        let rpx = Fr::from_repr(FrRepr::from_serial(rp.0)).unwrap();
-        let rpy = Fr::from_repr(FrRepr::from_serial(rp.1)).unwrap();
+        let rpx = Fr::from_repr(FrRepr::from_serial(enc.0)).unwrap();
+        let rpy = Fr::from_repr(FrRepr::from_serial(enc.1)).unwrap();
+        let enc = Fr::from_repr(FrRepr::from_serial(enc.2)).unwrap();
         Ok(B2CcircuitInput {
             coin: Num::new(cs, Assignment::known(coin))?,
             va: Num::new(cs, Assignment::known(va))?,

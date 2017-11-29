@@ -19,8 +19,7 @@ struct SendMessage{
     //hb:([u64;4],[u64;4]),
     coin:[u64;4],
     delt_ba:([u64;4],[u64;4]),
-    rp:([u64;4],[u64;4]),
-    enc:[u64;4],
+    enc:([u64;4],[u64;4],[u64;4]),
     onchain:bool
 }
 
@@ -96,17 +95,15 @@ impl Account{
     pub fn send(&self,v:[u64;2],rcm:[u64;2],address:([u64;4],[u64;4]))->(SendMessage,PrivateSendMessage){
         let rng = &mut thread_rng();
         let enc_random = [rng.gen(),rng.gen(),rng.gen(),rng.gen()];
-        let (proof,hb,coin,delt_ba,rp,enc) = p2c_info(self.r,rcm,self.v,v,address,enc_random).unwrap();
+        let (proof,hb,coin,delt_ba,enc) = p2c_info(self.r,rcm,self.v,v,address,enc_random).unwrap();
         assert_eq!(hb,self.get_balance());
-        let (enc1,rp1) = encrypt([rcm[0],rcm[1],v[0],v[1]],enc_random,address);
-        assert_eq!(rp,rp1);
+        let enc1 = encrypt([rcm[0],rcm[1],v[0],v[1]],enc_random,address);
         assert_eq!(enc,enc1);
         (
             SendMessage{
                 proof,
                 coin,
                 delt_ba,
-                rp,
                 enc,
                 onchain:false
             },
@@ -128,7 +125,7 @@ impl Account{
     }
 
     pub fn receive(&self,message:SendMessage)->(ReceiveMessage,PrivateReceiveMessage){
-        let (va,rcm) = decrypt(message.enc,message.rp,self.sk.clone());
+        let (va,rcm) = decrypt(message.enc,self.sk.clone());
         let rng = &mut thread_rng();
         let path:Vec<[u64;4]> = (0..TREEDEPTH).map(|_| {
             let mut v:[u64;4] = [0;4];
@@ -171,7 +168,7 @@ impl Account{
 }
 
 fn verify_send(message:&mut SendMessage,sender:&mut Account){
-    assert!(p2c_verify(sender.get_balance(),message.coin,message.delt_ba,message.rp,message.enc,message.proof).unwrap());
+    assert!(p2c_verify(sender.get_balance(),message.coin,message.delt_ba,message.enc,message.proof).unwrap());
     message.on_chain();
     sender.sub_balance(message.delt_ba);
 }

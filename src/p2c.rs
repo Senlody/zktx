@@ -250,8 +250,7 @@ pub fn p2c_info(
      ([u64; 4], [u64; 4]),
      [u64; 4],
      ([u64; 4], [u64; 4]),
-     ([u64; 4], [u64; 4]),
-     [u64; 4]),
+     ([u64; 4], [u64; 4], [u64; 4])),
     Error,
 > {
     let rng = &mut thread_rng();
@@ -280,17 +279,15 @@ pub fn p2c_info(
     let hb = (res[0].serial(), res[1].serial());
     let coin = res[2].serial();
     let delt_ba = (res[3].serial(), res[4].serial());
-    let rp = (res[5].serial(), res[6].serial());
-    let enc = res[7].serial();
-    Ok((proof, hb, coin, delt_ba, rp, enc))
+    let enc = (res[5].serial(), res[6].serial(),res[7].serial());
+    Ok((proof, hb, coin, delt_ba, enc))
 }
 
 pub fn p2c_verify(
     hb: ([u64; 4], [u64; 4]),
     coin: [u64; 4],
     delt_ba: ([u64; 4], [u64; 4]),
-    rp: ([u64; 4], [u64; 4]),
-    enc: [u64; 4],
+    enc: ([u64; 4], [u64; 4],[u64; 4]),
     proof: (([u64; 6], [u64; 6], bool),
             (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool),
             ([u64; 6], [u64; 6], bool)),
@@ -301,9 +298,9 @@ pub fn p2c_verify(
         let hb_x = Fr::from_repr(FrRepr::from_serial(hb.0)).unwrap();
         let hb_y = Fr::from_repr(FrRepr::from_serial(hb.1)).unwrap();
         let coin = Fr::from_repr(FrRepr::from_serial(coin)).unwrap();
-        let enc = Fr::from_repr(FrRepr::from_serial(enc)).unwrap();
-        let rpx = Fr::from_repr(FrRepr::from_serial(rp.0)).unwrap();
-        let rpy = Fr::from_repr(FrRepr::from_serial(rp.1)).unwrap();
+        let rpx = Fr::from_repr(FrRepr::from_serial(enc.0)).unwrap();
+        let rpy = Fr::from_repr(FrRepr::from_serial(enc.1)).unwrap();
+        let enc = Fr::from_repr(FrRepr::from_serial(enc.2)).unwrap();
         Ok(P2CcircuitInput {
             hb: (
                 Num::new(cs, Assignment::known(hb_x))?,

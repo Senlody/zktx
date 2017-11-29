@@ -23,14 +23,14 @@ fn test_b2c(samples:u32) {
         let addr = ([rng.gen(),rng.gen(),rng.gen(),0],[rng.gen(),rng.gen(),rng.gen(),0]);
         let random:[u64;4] = [rng.gen(),rng.gen(),rng.gen(),rng.gen()];
         let va:[u64;2] = [10,0];
-        let (proof, coin,rp,enc) = b2c_info(rcm, va, addr,random).unwrap();
+        let (proof, coin,enc) = b2c_info(rcm, va, addr,random).unwrap();
 //        println!("H_B   = {:?}", bn);
 //        println!("coin  = {:?}", coin);
 //        println!("proof  = {:?}", proof);
         total += now.elapsed();
 
         let now = Instant::now();
-        let res = b2c_verify(va, coin, rp,enc,proof).unwrap();
+        let res = b2c_verify(va, coin, enc,proof).unwrap();
         total2 += now.elapsed();
         assert!(res);
     }
@@ -192,7 +192,7 @@ fn test_p2c(samples:u32){
         let random:[u64;4] = [rng.gen(),rng.gen(),rng.gen(),rng.gen()];
         let ba :[u64;2]= [1000,0];
         let va :[u64;2]= [10,0];
-        let (proof,hb,coin,delt_ba,rp,enc) = p2c_info(rh,rcm,ba,va,addr,random).unwrap();
+        let (proof,hb,coin,delt_ba,enc) = p2c_info(rh,rcm,ba,va,addr,random).unwrap();
 //        println!("H_B   = {:?}",hb);
 //        println!("coin  = {:?}",coin);
 //        println!("H_B-n = {:?}",hbn);
@@ -200,7 +200,7 @@ fn test_p2c(samples:u32){
         total += now.elapsed();
 
         let now = Instant::now();
-        let res = p2c_verify(hb,coin,delt_ba,rp,enc,proof).unwrap();
+        let res = p2c_verify(hb,coin,delt_ba,enc,proof).unwrap();
         total2 += now.elapsed();
         assert!(res);
     }
@@ -248,9 +248,72 @@ fn test_amount(samples:u32){
     println!("average verifying time: {:?}", total2 / samples);
 }
 
+fn test_range(){
+    let samples:u32 = 3;
+    println!("test_range");
+    use zktx::common_verify::range::*;
+
+    ensure_range_param().unwrap();
+
+    use std::time::{Duration,Instant};
+    let mut total = Duration::new(0, 0);
+    let mut total2 = Duration::new(0, 0);
+
+    println!("Creating {} proofs and averaging the time spent creating them.", samples);
+
+    {
+        let now = Instant::now();
+        //倒序：359=101100111 -> [1,1,1,0,0,1,1,0,1]
+        let rng = &mut thread_rng();
+        let up :([u64;2],bool)= ([10,0],true);
+        let va :([u64;2],bool)= ([10,0],true);
+        let low :([u64;2],bool)= ([10,0],true);
+        let proof = range_info(up,va,low).unwrap();
+        total += now.elapsed();
+
+        let now = Instant::now();
+        let res = range_verify(up,low,proof).unwrap();
+        total2 += now.elapsed();
+        assert!(res);
+    }
+    {
+        let now = Instant::now();
+        //倒序：359=101100111 -> [1,1,1,0,0,1,1,0,1]
+        let rng = &mut thread_rng();
+        let up :([u64;2],bool)= ([10,0],true);
+        let va :([u64;2],bool)= ([10,0],true);
+        let low :([u64;2],bool)= ([10,0],true);
+        let proof = range_info(up,va,low).unwrap();
+        total += now.elapsed();
+
+        let now = Instant::now();
+        let res = range_verify(up,low,proof).unwrap();
+        total2 += now.elapsed();
+        assert!(res);
+    }
+    {
+        let now = Instant::now();
+        //倒序：359=101100111 -> [1,1,1,0,0,1,1,0,1]
+        let rng = &mut thread_rng();
+        let up :([u64;2],bool)= ([10,0],true);
+        let va :([u64;2],bool)= ([10,0],true);
+        let low :([u64;2],bool)= ([10,0],true);
+        let proof = range_info(up,va,low).unwrap();
+        total += now.elapsed();
+
+        let now = Instant::now();
+        let res = range_verify(up,low,proof).unwrap();
+        total2 += now.elapsed();
+        assert!(res);
+    }
+    println!("average proving time: {:?}", total / samples);
+    println!("average verifying time: {:?}", total2 / samples);
+}
+
 fn main(){
     test_pedersen();
     test_amount(2);
+    test_range();
     test_b2c(10);
     test_p2c(10);
     test_c2b(5);

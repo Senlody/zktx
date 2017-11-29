@@ -1,7 +1,7 @@
 pub const AMOUNTPARAMPATH: &str = "PARAMS/amountparams";
-pub const GREATERPARAMPATH: &str = "PARAMS/greaterparams";
+pub const RANGEPARAMPATH: &str = "PARAMS/rangeparams";
 pub use base::PARAMPATH;
 
 pub mod amount;
 
-pub mod greater;
+pub mod range;

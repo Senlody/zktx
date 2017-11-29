@@ -392,7 +392,7 @@ pub fn enc2str(enc:([u64;4],[u64;4],[u64;4]))->String{
 }
 
 pub fn str2enc(serial:String)->([u64;4],[u64;4],[u64;4]){
-    let enc:([u64;4],[u64;4],[u64;4]) = ([0;4],[0;4],[0;4]);
+    let mut enc:([u64;4],[u64;4],[u64;4]) = ([0;4],[0;4],[0;4]);
     let v:&[u8] = serial.as_ref();
     for i in 0..4{
         (enc.0)[i] = u8sto64(&v[i*8..(i+1)*8]);

@@ -12,6 +12,7 @@ fn test_b2c(samples:u32) {
 
     use std::time::{Duration, Instant};
     let mut total = Duration::new(0, 0);
+    let mut total2 = Duration::new(0, 0);
 
     println!("Creating {} proofs and averaging the time spent creating them.", samples);
 
@@ -28,10 +29,13 @@ fn test_b2c(samples:u32) {
 //        println!("proof  = {:?}", proof);
         total += now.elapsed();
 
+        let now = Instant::now();
         let res = b2c_verify(va, coin, rp,enc,proof).unwrap();
+        total2 += now.elapsed();
         assert!(res);
     }
     println!("average proving time: {:?}", total / samples);
+    println!("average verifying time: {:?}", total2 / samples);
 }
 
 fn test_c2b(samples:u32){
@@ -42,6 +46,7 @@ fn test_c2b(samples:u32){
 
     use std::time::{Duration,Instant};
     let mut total = Duration::new(0, 0);
+    let mut total2 = Duration::new(0, 0);
 
     println!("Creating {} proofs and averaging the time spent creating them.", samples);
 
@@ -67,10 +72,13 @@ fn test_c2b(samples:u32){
 //        println!("proof  = {:?}", proof);
         total += now.elapsed();
 
+        let now = Instant::now();
         let res = c2b_verify(ba,va,nullifier,root,proof).unwrap();
+        total2 += now.elapsed();
         assert!(res);
     }
     println!("average proving time: {:?}", total / samples);
+    println!("average verifying time: {:?}", total2 / samples);
 }
 
 fn test_c2p(samples:u32){
@@ -82,6 +90,7 @@ fn test_c2p(samples:u32){
 
     use std::time::{Duration,Instant};
     let mut total = Duration::new(0, 0);
+    let mut total2 = Duration::new(0, 0);
 
     println!("Creating {} proofs and averaging the time spent creating them.", samples);
 
@@ -152,10 +161,13 @@ fn test_c2p(samples:u32){
             root
         };
 
+        let now = Instant::now();
         let res = c2p_verify(nullifier,root,delt_ba,proof).unwrap();
+        total2 += now.elapsed();
         assert!(res);
     }
     println!("average proving time: {:?}", total / samples);
+    println!("average verifying time: {:?}", total2 / samples);
 }
 
 fn test_p2c(samples:u32){
@@ -166,6 +178,7 @@ fn test_p2c(samples:u32){
 
     use std::time::{Duration,Instant};
     let mut total = Duration::new(0, 0);
+    let mut total2 = Duration::new(0, 0);
 
     println!("Creating {} proofs and averaging the time spent creating them.", samples);
 
@@ -186,10 +199,13 @@ fn test_p2c(samples:u32){
 //        println!("proof  = {:?}", proof);
         total += now.elapsed();
 
+        let now = Instant::now();
         let res = p2c_verify(hb,coin,delt_ba,rp,enc,proof).unwrap();
+        total2 += now.elapsed();
         assert!(res);
     }
     println!("average proving time: {:?}", total / samples);
+    println!("average verifying time: {:?}", total2 / samples);
 }
 
 fn test_pedersen(){
@@ -208,6 +224,7 @@ fn test_amount(samples:u32){
 
     use std::time::{Duration,Instant};
     let mut total = Duration::new(0, 0);
+    let mut total2 = Duration::new(0, 0);
 
     println!("Creating {} proofs and averaging the time spent creating them.", samples);
 
@@ -222,10 +239,13 @@ fn test_amount(samples:u32){
         let (proof,rp,enc) = amount_info(rcm,va,addr,random).unwrap();
         total += now.elapsed();
 
+        let now = Instant::now();
         let res = amount_verify(rp,enc,proof).unwrap();
+        total2 += now.elapsed();
         assert!(res);
     }
     println!("average proving time: {:?}", total / samples);
+    println!("average verifying time: {:?}", total2 / samples);
 }
 
 fn main(){

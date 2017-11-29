@@ -106,6 +106,94 @@ fn u8to64(nums: [u8; 8]) -> u64 {
     res
 }
 
+pub fn proof2str(proof:(([u64; 6], [u64; 6], bool),
+                        (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool),
+                        ([u64; 6], [u64; 6], bool)))->String{
+    let mut res = String::with_capacity(385);
+    for i in 0..6{
+        res.push_str(String::from_utf8_lossy(u64to8(((proof.0).0)[i]).as_ref()).as_ref());
+    }
+    for i in 0..6{
+        res.push_str(String::from_utf8_lossy(u64to8(((proof.0).1)[i]).as_ref()).as_ref());
+    }
+    for i in 0..6{
+        res.push_str(String::from_utf8_lossy(u64to8((((proof.1).0).0)[i]).as_ref()).as_ref());
+    }
+    for i in 0..6{
+        res.push_str(String::from_utf8_lossy(u64to8((((proof.1).0).1)[i]).as_ref()).as_ref());
+    }
+    for i in 0..6{
+        res.push_str(String::from_utf8_lossy(u64to8((((proof.1).1).0)[i]).as_ref()).as_ref());
+    }
+    for i in 0..6{
+        res.push_str(String::from_utf8_lossy(u64to8((((proof.1).1).1)[i]).as_ref()).as_ref());
+    }
+    for i in 0..6{
+        res.push_str(String::from_utf8_lossy(u64to8(((proof.2).0)[i]).as_ref()).as_ref());
+    }
+    for i in 0..6{
+        res.push_str(String::from_utf8_lossy(u64to8(((proof.2).1)[i]).as_ref()).as_ref());
+    }
+    let mut b:u8 =0;
+    if (proof.0).2 {b+=1;}
+    b<<=1;
+    if (proof.1).2 {b+=1;}
+    b<<=1;
+    if (proof.2).2 {b+=1;}
+    res.push_str(String::from_utf8_lossy([b].as_ref()).as_ref());
+    res
+}
+
+#[inline(always)]
+fn u8sto64(nums: &[u8]) -> u64 {
+    let mut res: u64 = 0;
+    for i in 0..8 {
+        res <<= 8;
+        res |= nums[7 - i] as u64;
+    }
+    res
+}
+pub fn str2proof(serial:String)->(([u64; 6], [u64; 6], bool),
+                               (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool),
+                               ([u64; 6], [u64; 6], bool)){
+    let mut proof:(([u64; 6], [u64; 6], bool),
+                   (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool),
+                   ([u64; 6], [u64; 6], bool)) =
+        (([0; 6], [0; 6], false),
+         (([0; 6], [0; 6]), ([0; 6], [0; 6]), false),
+         ([0; 6], [0; 6], false));
+    let v:&[u8] = serial.as_ref();
+    for i in 0..6{
+        ((proof.0).0)[i] = u8sto64(&v[i*8..(i+1)*8]);
+    }
+    for i in 6..12{
+        ((proof.0).1)[i-6] = u8sto64(&v[i*8..(i+1)*8]);
+    }
+    for i in 12..18{
+        (((proof.1).0).0)[i-12] = u8sto64(&v[i*8..(i+1)*8]);
+    }
+    for i in 18..24{
+        (((proof.1).0).1)[i-18] = u8sto64(&v[i*8..(i+1)*8]);
+    }
+    for i in 24..30{
+        (((proof.1).1).0)[i-24] = u8sto64(&v[i*8..(i+1)*8]);
+    }
+    for i in 30..36{
+        (((proof.1).1).1)[i-30] = u8sto64(&v[i*8..(i+1)*8]);
+    }
+    for i in 36..42{
+        ((proof.2).0)[i-36] = u8sto64(&v[i*8..(i+1)*8]);
+    }
+    for i in 42..48{
+        ((proof.2).1)[i-42] = u8sto64(&v[i*8..(i+1)*8]);
+    }
+    let b =v[384];
+    (proof.0).2 = b&0b00000100 != 0;
+    (proof.1).2 = b&0b00000010 != 0;
+    (proof.2).2 = b&0b00000001 != 0;
+    proof
+}
+
 pub fn address(addr_sk: &Vec<bool>) -> ([u64; 4], [u64; 4]) {
     assert_eq!(addr_sk.len(), ADSK);
     let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]); //TODO:choose the seed

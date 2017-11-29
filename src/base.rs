@@ -194,6 +194,29 @@ pub fn str2proof(serial:String)->(([u64; 6], [u64; 6], bool),
     proof
 }
 
+pub fn addr2str(enc:([u64;4],[u64;4]))->String{
+    let mut res = String::with_capacity(64);
+    for i in 0..4{
+        res.push_str(String::from_utf8_lossy(u64to8((enc.0)[i]).as_ref()).as_ref());
+    }
+    for i in 0..4{
+        res.push_str(String::from_utf8_lossy(u64to8((enc.1)[i]).as_ref()).as_ref());
+    }
+    res
+}
+
+pub fn str2addr(serial:String)->([u64;4],[u64;4]){
+    let mut addr:([u64;4],[u64;4]) = ([0;4],[0;4]);
+    let v:&[u8] = serial.as_ref();
+    for i in 0..4{
+        (addr.0)[i] = u8sto64(&v[i*8..(i+1)*8]);
+    }
+    for i in 4..8{
+        (addr.1)[i-4] = u8sto64(&v[i*8..(i+1)*8]);
+    }
+    addr
+}
+
 pub fn address(addr_sk: &Vec<bool>) -> ([u64; 4], [u64; 4]) {
     assert_eq!(addr_sk.len(), ADSK);
     let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]); //TODO:choose the seed

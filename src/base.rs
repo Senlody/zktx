@@ -1,3 +1,5 @@
+extern crate hex;
+
 use pairing::bls12_381::{Fr, FrRepr};
 use pairing::{Field, PrimeField};
 use rand::{XorShiftRng, SeedableRng};
@@ -109,30 +111,30 @@ fn u8to64(nums: [u8; 8]) -> u64 {
 pub fn proof2str(proof:(([u64; 6], [u64; 6], bool),
                         (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool),
                         ([u64; 6], [u64; 6], bool)))->String{
-    let mut res = String::with_capacity(385);
+    let mut res = String::with_capacity(770);
     for i in 0..6{
-        res.push_str(String::from_utf8_lossy(u64to8(((proof.0).0)[i]).as_ref()).as_ref());
+        res.push_str(hex::encode(u64to8(((proof.0).0)[i]).as_ref()).as_ref());
     }
     for i in 0..6{
-        res.push_str(String::from_utf8_lossy(u64to8(((proof.0).1)[i]).as_ref()).as_ref());
+        res.push_str(hex::encode(u64to8(((proof.0).1)[i]).as_ref()).as_ref());
     }
     for i in 0..6{
-        res.push_str(String::from_utf8_lossy(u64to8((((proof.1).0).0)[i]).as_ref()).as_ref());
+        res.push_str(hex::encode(u64to8((((proof.1).0).0)[i]).as_ref()).as_ref());
     }
     for i in 0..6{
-        res.push_str(String::from_utf8_lossy(u64to8((((proof.1).0).1)[i]).as_ref()).as_ref());
+        res.push_str(hex::encode(u64to8((((proof.1).0).1)[i]).as_ref()).as_ref());
     }
     for i in 0..6{
-        res.push_str(String::from_utf8_lossy(u64to8((((proof.1).1).0)[i]).as_ref()).as_ref());
+        res.push_str(hex::encode(u64to8((((proof.1).1).0)[i]).as_ref()).as_ref());
     }
     for i in 0..6{
-        res.push_str(String::from_utf8_lossy(u64to8((((proof.1).1).1)[i]).as_ref()).as_ref());
+        res.push_str(hex::encode(u64to8((((proof.1).1).1)[i]).as_ref()).as_ref());
     }
     for i in 0..6{
-        res.push_str(String::from_utf8_lossy(u64to8(((proof.2).0)[i]).as_ref()).as_ref());
+        res.push_str(hex::encode(u64to8(((proof.2).0)[i]).as_ref()).as_ref());
     }
     for i in 0..6{
-        res.push_str(String::from_utf8_lossy(u64to8(((proof.2).1)[i]).as_ref()).as_ref());
+        res.push_str(hex::encode(u64to8(((proof.2).1)[i]).as_ref()).as_ref());
     }
     let mut b:u8 =0;
     if (proof.0).2 {b+=1;}
@@ -140,7 +142,7 @@ pub fn proof2str(proof:(([u64; 6], [u64; 6], bool),
     if (proof.1).2 {b+=1;}
     b<<=1;
     if (proof.2).2 {b+=1;}
-    res.push_str(String::from_utf8_lossy([b].as_ref()).as_ref());
+    res.push_str(hex::encode([b].as_ref()).as_ref());
     res
 }
 
@@ -162,7 +164,7 @@ pub fn str2proof(serial:String)->(([u64; 6], [u64; 6], bool),
         (([0; 6], [0; 6], false),
          (([0; 6], [0; 6]), ([0; 6], [0; 6]), false),
          ([0; 6], [0; 6], false));
-    let v:&[u8] = serial.as_ref();
+    let v:Vec<u8> = hex::decode(serial).unwrap();
     for i in 0..6{
         ((proof.0).0)[i] = u8sto64(&v[i*8..(i+1)*8]);
     }
@@ -195,19 +197,19 @@ pub fn str2proof(serial:String)->(([u64; 6], [u64; 6], bool),
 }
 
 pub fn addr2str(enc:([u64;4],[u64;4]))->String{
-    let mut res = String::with_capacity(64);
+    let mut res = String::with_capacity(128);
     for i in 0..4{
-        res.push_str(String::from_utf8_lossy(u64to8((enc.0)[i]).as_ref()).as_ref());
+        res.push_str(hex::encode(u64to8((enc.0)[i]).as_ref()).as_ref());
     }
     for i in 0..4{
-        res.push_str(String::from_utf8_lossy(u64to8((enc.1)[i]).as_ref()).as_ref());
+        res.push_str(hex::encode(u64to8((enc.1)[i]).as_ref()).as_ref());
     }
     res
 }
 
 pub fn str2addr(serial:String)->([u64;4],[u64;4]){
     let mut addr:([u64;4],[u64;4]) = ([0;4],[0;4]);
-    let v:&[u8] = serial.as_ref();
+    let v:Vec<u8> = hex::decode(serial).unwrap();
     for i in 0..4{
         (addr.0)[i] = u8sto64(&v[i*8..(i+1)*8]);
     }
@@ -401,22 +403,22 @@ fn point_mul(point: ([u64; 4], [u64; 4]), num: Vec<bool>) -> (Fr, Fr) {
 }
 
 pub fn enc2str(enc:([u64;4],[u64;4],[u64;4]))->String{
-    let mut res = String::with_capacity(96);
+    let mut res = String::with_capacity(192);
     for i in 0..4{
-        res.push_str(String::from_utf8_lossy(u64to8((enc.0)[i]).as_ref()).as_ref());
+        res.push_str(hex::encode(u64to8((enc.0)[i]).as_ref()).as_ref());
     }
     for i in 0..4{
-        res.push_str(String::from_utf8_lossy(u64to8((enc.1)[i]).as_ref()).as_ref());
+        res.push_str(hex::encode(u64to8((enc.1)[i]).as_ref()).as_ref());
     }
     for i in 0..4{
-        res.push_str(String::from_utf8_lossy(u64to8((enc.2)[i]).as_ref()).as_ref());
+        res.push_str(hex::encode(u64to8((enc.2)[i]).as_ref()).as_ref());
     }
     res
 }
 
 pub fn str2enc(serial:String)->([u64;4],[u64;4],[u64;4]){
     let mut enc:([u64;4],[u64;4],[u64;4]) = ([0;4],[0;4],[0;4]);
-    let v:&[u8] = serial.as_ref();
+    let v:Vec<u8> = hex::decode(serial).unwrap();
     for i in 0..4{
         (enc.0)[i] = u8sto64(&v[i*8..(i+1)*8]);
     }

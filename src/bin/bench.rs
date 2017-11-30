@@ -266,16 +266,18 @@ fn test_range(){
     let low :[([u64;2],bool); SAMPLES] = [([ 5,0], true),([ 5,0],false),([20,0],false),([20,0],false),([10,0], true),([10,0], true),([10,0], true),([ 5,0],false),([ 5,0],false),([20,0],false),([20,0],false),([20,0],false)];
     let expres :       [bool; SAMPLES] = [         true ,         true ,         true ,         true ,        false ,        false ,        false ,        false ,        false ,        false ,        false ,        false ];
 
+    let rng = &mut thread_rng();
     for i in 0..SAMPLES {
         let now = Instant::now();
         let up :([u64;2],bool)= up[i];
         let va :([u64;2],bool)= va[i];
+        let rh :[u64;2]= [rng.gen(),rng.gen()];
         let low :([u64;2],bool)= low[i];
-        let proof = range_info(up,va,low).unwrap();
+        let (proof,hv) = range_info(up,va,rh,low).unwrap();
         total += now.elapsed();
 
         let now = Instant::now();
-        let res = range_verify(up,low,proof).unwrap();
+        let res = range_verify(up,hv,low,proof).unwrap();
         total2 += now.elapsed();
         assert_eq!(res,expres[i]);
     }

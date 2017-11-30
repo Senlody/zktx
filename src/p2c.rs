@@ -28,14 +28,14 @@ struct P2Ccircuit<'a> {
     //random number,
     random: Assignment<Fr>,
     //result
-    res: &'a mut Vec<FrRepr>,
+    res: &'a mut Vec<FrRepr>
 }
 
 impl<'a> P2Ccircuit<'a> {
     fn blank(
         generators: &'a [(Vec<Fr>, Vec<Fr>)],
         j: &'a JubJub,
-        res: &'a mut Vec<FrRepr>,
+        res: &'a mut Vec<FrRepr>
     ) -> P2Ccircuit<'a> {
         P2Ccircuit {
             generators,
@@ -58,7 +58,7 @@ impl<'a> P2Ccircuit<'a> {
         va: Fr,
         addr: (Fr, Fr),
         random: Fr,
-        res: &'a mut Vec<FrRepr>,
+        res: &'a mut Vec<FrRepr>
     ) -> P2Ccircuit<'a> {
         assert_eq!(res.len(), 0);
         P2Ccircuit {
@@ -85,7 +85,7 @@ struct P2CcircuitInput {
     //rP
     rp: (Num<Bls12>, Num<Bls12>),
     //enc
-    enc: Num<Bls12>,
+    enc: Num<Bls12>
 }
 
 impl<'a> Input<Bls12> for P2CcircuitInput {
@@ -270,12 +270,11 @@ pub fn p2c_info(
                 Fr::from_repr(FrRepr(addr.1)).unwrap(),
             ),
             Fr::from_serial(enc_random),
-            &mut res,
+            &mut res
         ),
         p2c_param()?,
         rng,
-    )?
-        .serial();
+    )?.serial();
     let hb = (res[0].serial(), res[1].serial());
     let coin = res[2].serial();
     let delt_ba = (res[3].serial(), res[4].serial());

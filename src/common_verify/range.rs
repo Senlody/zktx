@@ -105,17 +105,17 @@ pub fn range_info(
 {
     let rng = &mut thread_rng();
     let up = {
-        let mut res = Fr::from_repr(FrRepr([(up.0)[0], (up.0)[1], 0, 0])).unwrap();
+        let mut res = Fr::from_repr(FrRepr::from_serial([(up.0)[0], (up.0)[1], 0, 0])).unwrap();
         if !up.1 {res.negate();}
         res
     };
     let va = {
-        let mut res = Fr::from_repr(FrRepr([(va.0)[0], (va.0)[1], 0, 0])).unwrap();
+        let mut res = Fr::from_repr(FrRepr::from_serial([(va.0)[0], (va.0)[1], 0, 0])).unwrap();
         if !va.1 {res.negate();}
         res
     };
     let low = {
-        let mut res = Fr::from_repr(FrRepr([(low.0)[0], (low.0)[1], 0, 0])).unwrap();
+        let mut res = Fr::from_repr(FrRepr::from_serial([(low.0)[0], (low.0)[1], 0, 0])).unwrap();
         if !low.1 {res.negate();}
         res
     };
@@ -140,12 +140,12 @@ pub fn range_verify(
 ) -> Result<bool, Error> {
     verify_proof(&range_vk()?, &Proof::from_serial(proof), |cs| {
         let up = {
-            let mut res = Fr::from_repr(FrRepr([(up.0)[0], (up.0)[1], 0, 0])).unwrap();
+            let mut res = Fr::from_repr(FrRepr::from_serial([(up.0)[0], (up.0)[1], 0, 0])).unwrap();
             if !up.1 {res.negate();}
             res
         };
         let low = {
-            let mut res = Fr::from_repr(FrRepr([(low.0)[0], (low.0)[1], 0, 0])).unwrap();
+            let mut res = Fr::from_repr(FrRepr::from_serial([(low.0)[0], (low.0)[1], 0, 0])).unwrap();
             if !low.1 {res.negate();}
             res
         };

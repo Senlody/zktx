@@ -249,7 +249,7 @@ fn test_amount(samples:u32){
 }
 
 fn test_range(){
-    let samples:u32 = 3;
+    const SAMPLES:usize = 12;
     println!("test_range");
     use zktx::common_verify::range::*;
 
@@ -259,61 +259,34 @@ fn test_range(){
     let mut total = Duration::new(0, 0);
     let mut total2 = Duration::new(0, 0);
 
-    println!("Creating {} proofs and averaging the time spent creating them.", samples);
+    println!("Creating {} proofs and averaging the time spent creating them.", SAMPLES);
 
-    {
+    let up : [([u64;2],bool); SAMPLES] = [([20,0], true),([20,0], true),([20,0], true),([10,0],false),([20,0], true),([20,0], true),([20,0], true),([20,0], true),([20,0], true),([10,0],false),([10,0],false),([10,0],false)];
+    let va : [([u64;2],bool); SAMPLES] = [([10,0], true),([10,0], true),([10,0],false),([15,0],false),([30,0], true),([ 5,0], true),([ 5,0],false),([15,0],false),([25,0], true),([25,0],false),([ 5,0],false),([ 5,0], true)];
+    let low :[([u64;2],bool); SAMPLES] = [([ 5,0], true),([ 5,0],false),([20,0],false),([20,0],false),([10,0], true),([10,0], true),([10,0], true),([ 5,0],false),([ 5,0],false),([20,0],false),([20,0],false),([20,0],false)];
+    let expres :       [bool; SAMPLES] = [         true ,         true ,         true ,         true ,        false ,        false ,        false ,        false ,        false ,        false ,        false ,        false ];
+
+    for i in 0..SAMPLES {
         let now = Instant::now();
-        //倒序：359=101100111 -> [1,1,1,0,0,1,1,0,1]
-        let rng = &mut thread_rng();
-        let up :([u64;2],bool)= ([10,0],true);
-        let va :([u64;2],bool)= ([10,0],true);
-        let low :([u64;2],bool)= ([10,0],true);
+        let up :([u64;2],bool)= up[i];
+        let va :([u64;2],bool)= va[i];
+        let low :([u64;2],bool)= low[i];
         let proof = range_info(up,va,low).unwrap();
         total += now.elapsed();
 
         let now = Instant::now();
         let res = range_verify(up,low,proof).unwrap();
         total2 += now.elapsed();
-        assert!(res);
+        assert_eq!(res,expres[i]);
     }
-    {
-        let now = Instant::now();
-        //倒序：359=101100111 -> [1,1,1,0,0,1,1,0,1]
-        let rng = &mut thread_rng();
-        let up :([u64;2],bool)= ([10,0],true);
-        let va :([u64;2],bool)= ([10,0],true);
-        let low :([u64;2],bool)= ([10,0],true);
-        let proof = range_info(up,va,low).unwrap();
-        total += now.elapsed();
-
-        let now = Instant::now();
-        let res = range_verify(up,low,proof).unwrap();
-        total2 += now.elapsed();
-        assert!(res);
-    }
-    {
-        let now = Instant::now();
-        //倒序：359=101100111 -> [1,1,1,0,0,1,1,0,1]
-        let rng = &mut thread_rng();
-        let up :([u64;2],bool)= ([10,0],true);
-        let va :([u64;2],bool)= ([10,0],true);
-        let low :([u64;2],bool)= ([10,0],true);
-        let proof = range_info(up,va,low).unwrap();
-        total += now.elapsed();
-
-        let now = Instant::now();
-        let res = range_verify(up,low,proof).unwrap();
-        total2 += now.elapsed();
-        assert!(res);
-    }
-    println!("average proving time: {:?}", total / samples);
-    println!("average verifying time: {:?}", total2 / samples);
+    println!("average proving time: {:?}", total / SAMPLES as u32);
+    println!("average verifying time: {:?}", total2 / SAMPLES as u32);
 }
 
 fn main(){
+    test_range();
     test_pedersen();
     test_amount(2);
-    test_range();
     test_b2c(10);
     test_p2c(10);
     test_c2b(5);

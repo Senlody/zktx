@@ -196,6 +196,19 @@ pub fn str2proof(serial:String)->(([u64; 6], [u64; 6], bool),
     proof
 }
 
+use std::num::ParseIntError;
+pub fn str2value(st:String)->Result<([u64;2],bool),ParseIntError>{
+    let st:&str = st.as_ref();
+    let mut res:([u64;2],bool) = ([0;2],true);
+    if st.get(0..1) == Some("-") {
+        res.1 = false;
+        res.0[0] = u64::from_str_radix(&st[1..],10)?;
+    }else{
+        res.0[0] = u64::from_str_radix(st,10)?;
+    }
+    Ok(res)
+}
+
 pub fn addr2str(enc:([u64;4],[u64;4]))->String{
     let mut res = String::with_capacity(128);
     for i in 0..4{

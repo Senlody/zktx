@@ -233,13 +233,14 @@ impl<'a> Circuit<Bls12> for C2Pcircuit<'a> {
 pub fn c2p_info(
     rcm: [u64; 2],
     va: [u64; 2],
-    addr_sk: Vec<bool>,
+    addr_sk: String,
     path: Vec<String>,
     loc: Vec<bool>,
 ) -> Result<(String,String,String,String),Error> {
     let rng = &mut thread_rng();
     let j = JubJub::new();
     let path = path.iter().map(|p|str2u644(p.clone())).collect();
+    let addr_sk = str2sk(addr_sk);
     let mut res: Vec<FrRepr> = vec![];
     let proof = create_random_proof::<Bls12, _, _, _>(
         C2Pcircuit::new(

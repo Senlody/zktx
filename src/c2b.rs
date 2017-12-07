@@ -235,7 +235,7 @@ pub fn c2b_info(
     rcm: [u64; 2],
     ba: [u64; 2],
     va: [u64; 2],
-    addr_sk: Vec<bool>,
+    addr_sk: String,
     path: Vec<String>,
     loc: Vec<bool>,
 ) -> Result<(String,String,String), Error>
@@ -244,6 +244,7 @@ pub fn c2b_info(
     let j = JubJub::new();
     let mut res: Vec<FrRepr> = vec![];
     let path = path.iter().map(|p|str2u644(p.clone())).collect();
+    let addr_sk = str2sk(addr_sk);
     let proof = create_random_proof::<Bls12, _, _, _>(
         C2Bcircuit::new(
             &ph_generator(),

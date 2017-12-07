@@ -17,7 +17,7 @@ pub mod common_verify;
 
 mod convert;
 
-pub use convert::{u6442str,str2u644,str2point,str2value};
+pub use convert::{u6442str,str2u644,str2point,str2value,sk2str};
 
 //to delete
 pub fn pedersen_hash(bits: &[bool]) -> [u64; 4] {

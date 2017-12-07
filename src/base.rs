@@ -88,7 +88,8 @@ pub(crate) fn ph_generator() -> Vec<(Vec<Fr>, Vec<Fr>)> {
     serial
 }
 
-pub fn address(addr_sk: &Vec<bool>) -> String {
+pub fn address(addr_sk: String) -> String {
+    let addr_sk = str2sk(addr_sk);
     assert_eq!(addr_sk.len(), ADSK);
     let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]); //TODO:choose the seed
     let j = JubJub::new();
@@ -314,7 +315,8 @@ pub fn encrypt(message:[u64;4],random:[u64;4],address:String)->String{
     enc2str((x0.into_repr().serial(),y0.into_repr().serial(),enc.into_repr().serial()))
 }
 
-pub fn decrypt(secret: String, sk: Vec<bool>) -> ([u64; 2], [u64; 2]) {
+pub fn decrypt(secret: String, sk: String) -> ([u64; 2], [u64; 2]) {
+    let sk = str2sk(sk);
     let secret = str2enc(secret);
     let rqx = point_mul((secret.0,secret.1), sk).0;
     let mut message = Fr::from_repr(FrRepr::from_serial(secret.2)).unwrap();

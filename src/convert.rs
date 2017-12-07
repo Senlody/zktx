@@ -189,3 +189,33 @@ pub fn str2enc(serial:String)->([u64;4],[u64;4],[u64;4]){
     }
     enc
 }
+
+pub fn sk2str(sk:Vec<bool>)->String{
+    assert_eq!(sk.len(),256);
+    let mut u8s:Vec<u8> = Vec::with_capacity(32);
+    for u in sk.chunks(8){
+        let mut num:u8 = 0;
+        for i in 0..8{
+            num<<=1;
+            num += {
+                if u[i]{1}
+                    else{0}
+            };
+        }
+        u8s.push(num);
+    }
+    hex::encode(u8s)
+}
+
+pub fn str2sk(serial:String)->Vec<bool>{
+    let serial:Vec<u8> = hex::decode(serial).unwrap();
+    let mut res:Vec<bool> = Vec::with_capacity(256);
+    for u in serial.iter(){
+        let mut num = *u;
+        for _ in 0..8{
+            res.push(num & 0b10000000 == 0b10000000);
+            num<<=1;
+        }
+    }
+    res
+}

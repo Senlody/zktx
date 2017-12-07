@@ -11,7 +11,7 @@ struct Account{
     pub address: String,//address
     v: [u64;2],//private information: balance
     r: [u64;4],//private information: random number
-    sk: Vec<bool>//private information: secret_key
+    sk: String//private information: secret_key
 }
 
 struct SendMessage{
@@ -64,8 +64,8 @@ struct PrivateReceiveMessage{
 impl Account{
     pub fn new(v:[u64;2],r:[u64;2])->Self{
         let rng = &mut thread_rng();
-        let sk = (0..ADSK).map(|_| rng.gen()).collect::<Vec<bool>>();
-        let address = address(&sk);
+        let sk = zktx::sk2str((0..ADSK).map(|_| rng.gen()).collect::<Vec<bool>>());
+        let address = address(sk.clone());
         let balance = v_p1_add_r_p2(v,r);
         Account{
             balance,

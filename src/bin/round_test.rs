@@ -7,19 +7,19 @@ use zktx::c2p::*;
 use zktx::p2c::*;
 
 struct Account{
-    pub balance: ([u64;4],[u64;4]),//in homomorphic encrpytion, = vP1+rP2
-    pub address: ([u64;4],[u64;4]),//address
+    pub balance: String,//in homomorphic encrpytion, = vP1+rP2
+    pub address: String,//address
     v: [u64;2],//private information: balance
     r: [u64;4],//private information: random number
     sk: Vec<bool>//private information: secret_key
 }
 
 struct SendMessage{
-    proof:(([u64; 6], [u64; 6], bool), (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool), ([u64; 6], [u64; 6], bool)),
+    proof:String,
     //hb:([u64;4],[u64;4]),
-    coin:[u64;4],
-    delt_ba:([u64;4],[u64;4]),
-    enc:([u64;4],[u64;4],[u64;4]),
+    coin:String,
+    delt_ba:String,
+    enc:String,
     onchain:bool
 }
 
@@ -39,10 +39,10 @@ impl SendMessage{
 }
 
 struct ReceiveMessage{
-    proof:(([u64; 6], [u64; 6], bool), (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool), ([u64; 6], [u64; 6], bool)),
-    nullifier:[u64;4],
-    root:[u64;4],
-    delt_ba:([u64;4],[u64;4]),
+    proof:String,
+    nullifier:String,
+    root:String,
+    delt_ba:String,
     onchain:bool
 }
 
@@ -76,28 +76,28 @@ impl Account{
         }
     }
 
-    pub fn get_address(&self)->([u64;4],[u64;4]){
-        self.address
+    pub fn get_address(&self)->String{
+        self.address.clone()
     }
 
-    pub fn get_balance(&self)->([u64;4],[u64;4]){
-        self.balance
+    pub fn get_balance(&self)->String{
+        self.balance.clone()
     }
 
-    fn add_balance(&mut self,value:([u64;4],[u64;4])){
-        self.balance = ecc_add(self.balance,value);
+    fn add_balance(&mut self,value:String){
+        self.balance = ecc_add(self.balance.clone(),value);
     }
 
-    fn sub_balance(&mut self,value:([u64;4],[u64;4])){
-        self.balance = ecc_sub(self.balance,value);
+    fn sub_balance(&mut self,value:String){
+        self.balance = ecc_sub(self.balance.clone(),value);
     }
 
-    pub fn send(&self,v:[u64;2],rcm:[u64;2],address:([u64;4],[u64;4]))->(SendMessage,PrivateSendMessage){
+    pub fn send(&self,v:[u64;2],rcm:[u64;2],address:String)->(SendMessage,PrivateSendMessage){
         let rng = &mut thread_rng();
         let enc_random = [rng.gen(),rng.gen(),rng.gen(),rng.gen()];
-        let (proof,hb,coin,delt_ba,enc) = p2c_info(self.r,rcm,self.v,v,address,enc_random).unwrap();
+        let (proof,hb,coin,delt_ba,enc) = p2c_info(self.r,rcm,self.v,v,address.clone(),enc_random).unwrap();
         assert_eq!(hb,self.get_balance());
-        let enc1 = encrypt([rcm[0],rcm[1],v[0],v[1]],enc_random,address);
+        let enc1 = encrypt([rcm[0],rcm[1],v[0],v[1]],enc_random,address.clone());
         assert_eq!(enc,enc1);
         (
             SendMessage{
@@ -127,12 +127,12 @@ impl Account{
     pub fn receive(&self,message:SendMessage)->(ReceiveMessage,PrivateReceiveMessage){
         let (va,rcm) = decrypt(message.enc,self.sk.clone());
         let rng = &mut thread_rng();
-        let path:Vec<[u64;4]> = (0..TREEDEPTH).map(|_| {
+        let path:Vec<String> = (0..TREEDEPTH).map(|_| {
             let mut v:[u64;4] = [0;4];
             for i in 0..4{
                 v[i] = rng.gen();
             }
-            v
+            zktx::u6442str(v)
         }).collect();
         let locs:Vec<bool> = (0..TREEDEPTH).map(|_| rng.gen()).collect::<Vec<bool>>();
         let (proof,nullifier,root,delt_ba) = c2p_info(rcm,va,self.sk.clone(),path,locs).unwrap();
@@ -168,15 +168,15 @@ impl Account{
 }
 
 fn verify_send(message:&mut SendMessage,sender:&mut Account){
-    assert!(p2c_verify(sender.get_balance(),message.coin,message.delt_ba,message.enc,message.proof).unwrap());
+    assert!(p2c_verify(sender.get_balance(),message.coin.clone(),message.delt_ba.clone(),message.enc.clone(),message.proof.clone()).unwrap());
     message.on_chain();
-    sender.sub_balance(message.delt_ba);
+    sender.sub_balance(message.delt_ba.clone());
 }
 
 fn verify_receive(message:&mut ReceiveMessage,receiver:&mut Account){
-    assert!(c2p_verify(message.nullifier,message.root,message.delt_ba,message.proof).unwrap());
+    assert!(c2p_verify(message.nullifier.clone(),message.root.clone(),message.delt_ba.clone(),message.proof.clone()).unwrap());
     message.on_chain();
-    receiver.add_balance(message.delt_ba);
+    receiver.add_balance(message.delt_ba.clone());
 }
 
 fn round_test(){

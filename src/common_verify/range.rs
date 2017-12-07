@@ -7,6 +7,7 @@ use rand::thread_rng;
 use jubjub::*;
 
 use common_verify::*;
+use convert::*;
 
 use std::fs::File;
 use std::path::Path;
@@ -134,11 +135,7 @@ pub fn range_info(
     va: ([u64; 2],bool),
     rh: [u64;2],
     low: ([u64; 2],bool)
-) -> Result<
-    ((([u64; 6], [u64; 6], bool),
-      (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool),
-      ([u64; 6], [u64; 6], bool)),([u64;4],[u64;4])),
-    Error>
+) -> Result<(String,String),Error>
 {
     let rng = &mut thread_rng();
     let up = {
@@ -170,17 +167,17 @@ pub fn range_info(
         rng,
     )?.serial();
     let hv = (res[0].serial(),res[1].serial());
-    Ok((proof,hv))
+    Ok((proof2str(proof),point2str(hv)))
 }
 
 pub fn range_verify(
     up: ([u64; 2],bool),
-    hv:([u64;4],[u64;4]),
+    hv:String,
     low: ([u64; 2],bool),
-    proof: (([u64; 6], [u64; 6], bool),
-            (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool),
-            ([u64; 6], [u64; 6], bool)),
+    proof: String
 ) -> Result<bool, Error> {
+    let hv = str2point(hv);
+    let proof = str2proof(proof);
     verify_proof(&range_vk()?, &Proof::from_serial(proof), |cs| {
         let up = {
             let mut res = Fr::from_repr(FrRepr::from_serial([(up.0)[0], (up.0)[1], 0, 0])).unwrap();

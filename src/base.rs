@@ -1,5 +1,3 @@
-extern crate hex;
-
 use pairing::bls12_381::{Fr, FrRepr};
 use pairing::{Field, PrimeField};
 use rand::{XorShiftRng, SeedableRng};
@@ -19,6 +17,8 @@ pub const P2CPARAMPATH: &str = "PARAMS/p2cparams";
 pub const B2CPARAMPATH: &str = "PARAMS/b2cparams";
 pub const C2PPARAMPATH: &str = "PARAMS/c2pparams";
 pub const GENERATORPATH: &str = "PARAMS/generators";
+
+use super::convert::*;
 
 pub(crate) fn ph_generator() -> Vec<(Vec<Fr>, Vec<Fr>)> {
     use std::fs::File;
@@ -88,151 +88,7 @@ pub(crate) fn ph_generator() -> Vec<(Vec<Fr>, Vec<Fr>)> {
     serial
 }
 
-#[inline(always)]
-fn u64to8(mut num: u64) -> [u8; 8] {
-    let mut out: [u8; 8] = [0; 8];
-    for i in 0..8 {
-        out[i] = (num & 0b11111111) as u8;
-        num >>= 8;
-    }
-    out
-}
-
-#[inline(always)]
-fn u8to64(nums: [u8; 8]) -> u64 {
-    let mut res: u64 = 0;
-    for i in 0..8 {
-        res <<= 8;
-        res |= nums[7 - i] as u64;
-    }
-    res
-}
-
-pub fn proof2str(proof:(([u64; 6], [u64; 6], bool),
-                        (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool),
-                        ([u64; 6], [u64; 6], bool)))->String{
-    let mut res = String::with_capacity(770);
-    for i in 0..6{
-        res.push_str(hex::encode(u64to8(((proof.0).0)[i]).as_ref()).as_ref());
-    }
-    for i in 0..6{
-        res.push_str(hex::encode(u64to8(((proof.0).1)[i]).as_ref()).as_ref());
-    }
-    for i in 0..6{
-        res.push_str(hex::encode(u64to8((((proof.1).0).0)[i]).as_ref()).as_ref());
-    }
-    for i in 0..6{
-        res.push_str(hex::encode(u64to8((((proof.1).0).1)[i]).as_ref()).as_ref());
-    }
-    for i in 0..6{
-        res.push_str(hex::encode(u64to8((((proof.1).1).0)[i]).as_ref()).as_ref());
-    }
-    for i in 0..6{
-        res.push_str(hex::encode(u64to8((((proof.1).1).1)[i]).as_ref()).as_ref());
-    }
-    for i in 0..6{
-        res.push_str(hex::encode(u64to8(((proof.2).0)[i]).as_ref()).as_ref());
-    }
-    for i in 0..6{
-        res.push_str(hex::encode(u64to8(((proof.2).1)[i]).as_ref()).as_ref());
-    }
-    let mut b:u8 =0;
-    if (proof.0).2 {b+=1;}
-    b<<=1;
-    if (proof.1).2 {b+=1;}
-    b<<=1;
-    if (proof.2).2 {b+=1;}
-    res.push_str(hex::encode([b].as_ref()).as_ref());
-    res
-}
-
-#[inline(always)]
-fn u8sto64(nums: &[u8]) -> u64 {
-    let mut res: u64 = 0;
-    for i in 0..8 {
-        res <<= 8;
-        res |= nums[7 - i] as u64;
-    }
-    res
-}
-pub fn str2proof(serial:String)->(([u64; 6], [u64; 6], bool),
-                               (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool),
-                               ([u64; 6], [u64; 6], bool)){
-    let mut proof:(([u64; 6], [u64; 6], bool),
-                   (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool),
-                   ([u64; 6], [u64; 6], bool)) =
-        (([0; 6], [0; 6], false),
-         (([0; 6], [0; 6]), ([0; 6], [0; 6]), false),
-         ([0; 6], [0; 6], false));
-    let v:Vec<u8> = hex::decode(serial).unwrap();
-    for i in 0..6{
-        ((proof.0).0)[i] = u8sto64(&v[i*8..(i+1)*8]);
-    }
-    for i in 6..12{
-        ((proof.0).1)[i-6] = u8sto64(&v[i*8..(i+1)*8]);
-    }
-    for i in 12..18{
-        (((proof.1).0).0)[i-12] = u8sto64(&v[i*8..(i+1)*8]);
-    }
-    for i in 18..24{
-        (((proof.1).0).1)[i-18] = u8sto64(&v[i*8..(i+1)*8]);
-    }
-    for i in 24..30{
-        (((proof.1).1).0)[i-24] = u8sto64(&v[i*8..(i+1)*8]);
-    }
-    for i in 30..36{
-        (((proof.1).1).1)[i-30] = u8sto64(&v[i*8..(i+1)*8]);
-    }
-    for i in 36..42{
-        ((proof.2).0)[i-36] = u8sto64(&v[i*8..(i+1)*8]);
-    }
-    for i in 42..48{
-        ((proof.2).1)[i-42] = u8sto64(&v[i*8..(i+1)*8]);
-    }
-    let b =v[384];
-    (proof.0).2 = b&0b00000100 != 0;
-    (proof.1).2 = b&0b00000010 != 0;
-    (proof.2).2 = b&0b00000001 != 0;
-    proof
-}
-
-use std::num::ParseIntError;
-pub fn str2value(st:String)->Result<([u64;2],bool),ParseIntError>{
-    let st:&str = st.as_ref();
-    let mut res:([u64;2],bool) = ([0;2],true);
-    if st.get(0..1) == Some("-") {
-        res.1 = false;
-        res.0[0] = u64::from_str_radix(&st[1..],10)?;
-    }else{
-        res.0[0] = u64::from_str_radix(st,10)?;
-    }
-    Ok(res)
-}
-
-pub fn addr2str(enc:([u64;4],[u64;4]))->String{
-    let mut res = String::with_capacity(128);
-    for i in 0..4{
-        res.push_str(hex::encode(u64to8((enc.0)[i]).as_ref()).as_ref());
-    }
-    for i in 0..4{
-        res.push_str(hex::encode(u64to8((enc.1)[i]).as_ref()).as_ref());
-    }
-    res
-}
-
-pub fn str2addr(serial:String)->([u64;4],[u64;4]){
-    let mut addr:([u64;4],[u64;4]) = ([0;4],[0;4]);
-    let v:Vec<u8> = hex::decode(serial).unwrap();
-    for i in 0..4{
-        (addr.0)[i] = u8sto64(&v[i*8..(i+1)*8]);
-    }
-    for i in 4..8{
-        (addr.1)[i-4] = u8sto64(&v[i*8..(i+1)*8]);
-    }
-    addr
-}
-
-pub fn address(addr_sk: &Vec<bool>) -> ([u64; 4], [u64; 4]) {
+pub fn address(addr_sk: &Vec<bool>) -> String {
     assert_eq!(addr_sk.len(), ADSK);
     let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]); //TODO:choose the seed
     let j = JubJub::new();
@@ -253,7 +109,7 @@ pub fn address(addr_sk: &Vec<bool>) -> ([u64; 4], [u64; 4]) {
         }
     }
 
-    (x0.into_repr().serial(), y0.into_repr().serial())
+    point2str((x0.into_repr().serial(), y0.into_repr().serial()))
 }
 
 fn point_double(x: Fr, y: Fr, j: &JubJub) -> (Fr, Fr) {
@@ -295,7 +151,9 @@ fn point_add(x0: &Fr, y0: &Fr, xp: &Fr, yp: &Fr, j: &JubJub) -> (Fr, Fr) {
     (x.clone(), y.clone())
 }
 
-pub fn ecc_add(point1: ([u64; 4], [u64; 4]), point2: ([u64; 4], [u64; 4])) -> ([u64; 4], [u64; 4]) {
+pub fn ecc_add(point1: String, point2: String) -> String {
+    let point1 = str2point(point1);
+    let point2 = str2point(point2);
     let (xfr, yfr) = point_add(
         &Fr::from_repr(FrRepr::from_serial(point1.0)).unwrap(),
         &Fr::from_repr(FrRepr::from_serial(point1.1)).unwrap(),
@@ -305,10 +163,12 @@ pub fn ecc_add(point1: ([u64; 4], [u64; 4]), point2: ([u64; 4], [u64; 4])) -> ([
     );
     let x = xfr.into_repr().serial();
     let y = yfr.into_repr().serial();
-    (x, y)
+    point2str((x, y))
 }
 
-pub fn ecc_sub(point1: ([u64; 4], [u64; 4]), point2: ([u64; 4], [u64; 4])) -> ([u64; 4], [u64; 4]) {
+pub fn ecc_sub(point1: String, point2: String) -> String {
+    let point1 = str2point(point1);
+    let point2 = str2point(point2);
     let mut temp = Fr::from_repr(FrRepr::from_serial(point2.0)).unwrap();
     temp.negate();
     let (xfr, yfr) = point_add(
@@ -320,10 +180,10 @@ pub fn ecc_sub(point1: ([u64; 4], [u64; 4]), point2: ([u64; 4], [u64; 4])) -> ([
     );
     let x = xfr.into_repr().serial();
     let y = yfr.into_repr().serial();
-    (x, y)
+    point2str((x, y))
 }
 
-pub fn v_p1_add_r_p2(v: [u64; 2], r: [u64; 2]) -> ([u64; 4], [u64; 4]) {
+pub fn v_p1_add_r_p2(v: [u64;2], r: [u64;2]) -> String {
     let v = {
         let mut vec = Vec::with_capacity(128);
         let mut num = v[0];
@@ -387,7 +247,7 @@ pub fn v_p1_add_r_p2(v: [u64; 2], r: [u64; 2]) -> ([u64; 4], [u64; 4]) {
         }
     }
 
-    (x0.into_repr().serial(), y0.into_repr().serial())
+    point2str((x0.into_repr().serial(), y0.into_repr().serial()))
 }
 
 fn point_mul(point: ([u64; 4], [u64; 4]), num: Vec<bool>) -> (Fr, Fr) {
@@ -415,36 +275,8 @@ fn point_mul(point: ([u64; 4], [u64; 4]), num: Vec<bool>) -> (Fr, Fr) {
     (x0, y0)
 }
 
-pub fn enc2str(enc:([u64;4],[u64;4],[u64;4]))->String{
-    let mut res = String::with_capacity(192);
-    for i in 0..4{
-        res.push_str(hex::encode(u64to8((enc.0)[i]).as_ref()).as_ref());
-    }
-    for i in 0..4{
-        res.push_str(hex::encode(u64to8((enc.1)[i]).as_ref()).as_ref());
-    }
-    for i in 0..4{
-        res.push_str(hex::encode(u64to8((enc.2)[i]).as_ref()).as_ref());
-    }
-    res
-}
-
-pub fn str2enc(serial:String)->([u64;4],[u64;4],[u64;4]){
-    let mut enc:([u64;4],[u64;4],[u64;4]) = ([0;4],[0;4],[0;4]);
-    let v:Vec<u8> = hex::decode(serial).unwrap();
-    for i in 0..4{
-        (enc.0)[i] = u8sto64(&v[i*8..(i+1)*8]);
-    }
-    for i in 4..8{
-        (enc.1)[i-4] = u8sto64(&v[i*8..(i+1)*8]);
-    }
-    for i in 8..12{
-        (enc.2)[i-8] = u8sto64(&v[i*8..(i+1)*8]);
-    }
-    enc
-}
-
-pub fn encrypt(message:[u64;4],random:[u64;4],address:([u64;4],[u64;4]))->([u64;4],[u64;4],[u64;4]){
+pub fn encrypt(message:[u64;4],random:[u64;4],address:String)->String{
+    let address = str2point(address);
     let random = Fr::from_serial(random).into_repr().serial();
     let random = {
         let mut v = vec![];
@@ -479,10 +311,11 @@ pub fn encrypt(message:[u64;4],random:[u64;4],address:([u64;4],[u64;4]))->([u64;
         }
     }
 
-    (x0.into_repr().serial(),y0.into_repr().serial(),enc.into_repr().serial())
+    enc2str((x0.into_repr().serial(),y0.into_repr().serial(),enc.into_repr().serial()))
 }
 
-pub fn decrypt(secret: ([u64; 4], [u64; 4],[u64; 4]), sk: Vec<bool>) -> ([u64; 2], [u64; 2]) {
+pub fn decrypt(secret: String, sk: Vec<bool>) -> ([u64; 2], [u64; 2]) {
+    let secret = str2enc(secret);
     let rqx = point_mul((secret.0,secret.1), sk).0;
     let mut message = Fr::from_repr(FrRepr::from_serial(secret.2)).unwrap();
     message.sub_assign(&rqx);

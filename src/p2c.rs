@@ -7,6 +7,7 @@ use rand::thread_rng;
 use jubjub::*;
 
 use base::*;
+use convert::*;
 
 use std::fs::File;
 use std::path::Path;
@@ -241,18 +242,10 @@ pub fn p2c_info(
     rcm: [u64; 2],
     ba: [u64; 2],
     va: [u64; 2],
-    addr: ([u64; 4], [u64; 4]),
+    addr: String,
     enc_random: [u64; 4],
-) -> Result<
-    ((([u64; 6], [u64; 6], bool),
-      (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool),
-      ([u64; 6], [u64; 6], bool)),
-     ([u64; 4], [u64; 4]),
-     [u64; 4],
-     ([u64; 4], [u64; 4]),
-     ([u64; 4], [u64; 4], [u64; 4])),
-    Error,
-> {
+) -> Result<(String,String,String,String,String), Error> {
+    let addr = str2point(addr);
     let rng = &mut thread_rng();
     let j = JubJub::new();
     //TODO:Balance&value<2^vbit
@@ -279,18 +272,20 @@ pub fn p2c_info(
     let coin = res[2].serial();
     let delt_ba = (res[3].serial(), res[4].serial());
     let enc = (res[5].serial(), res[6].serial(),res[7].serial());
-    Ok((proof, hb, coin, delt_ba, enc))
+    Ok((proof2str(proof), point2str(hb), u6442str(coin), point2str(delt_ba), enc2str(enc)))
 }
 
 pub fn p2c_verify(
-    hb: ([u64; 4], [u64; 4]),
-    coin: [u64; 4],
-    delt_ba: ([u64; 4], [u64; 4]),
-    enc: ([u64; 4], [u64; 4],[u64; 4]),
-    proof: (([u64; 6], [u64; 6], bool),
-            (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool),
-            ([u64; 6], [u64; 6], bool)),
-) -> Result<bool, Error> {
+    hb: String,
+    coin: String,
+    delt_ba: String,
+    enc: String,
+    proof: String) -> Result<bool, Error> {
+    let hb = str2point(hb);
+    let coin = str2u644(coin);
+    let delt_ba = str2point(delt_ba);
+    let enc = str2enc(enc);
+    let proof = str2proof(proof);
     verify_proof(&p2c_vk()?, &Proof::from_serial(proof), |cs| {
         let delt_x = Fr::from_repr(FrRepr::from_serial(delt_ba.0)).unwrap();
         let delt_y = Fr::from_repr(FrRepr::from_serial(delt_ba.1)).unwrap();

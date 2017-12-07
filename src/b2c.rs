@@ -7,6 +7,7 @@ use rand::thread_rng;
 use jubjub::*;
 
 use base::*;
+use convert::*;
 
 use std::fs::File;
 use std::path::Path;
@@ -179,16 +180,13 @@ impl<'a> Circuit<Bls12> for B2Ccircuit<'a> {
 pub fn b2c_info(
     rcm: [u64; 2],
     va: [u64; 2],
-    addr: ([u64; 4], [u64; 4]),
+    addr: String,
     enc_random: [u64; 4],
 ) -> Result<
-    ((([u64; 6], [u64; 6], bool),
-      (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool),
-      ([u64; 6], [u64; 6], bool)),
-     [u64; 4],
-     ([u64; 4], [u64; 4], [u64; 4])),
-    Error,
-> {
+    (String,String,String),
+    Error>
+{
+    let addr = str2point(addr);
     let rng = &mut thread_rng();
     let j = JubJub::new();
     let mut res: Vec<FrRepr> = vec![];
@@ -207,21 +205,21 @@ pub fn b2c_info(
         ),
         b2c_param()?,
         rng,
-    )?
-        .serial();
+    )?.serial();
     let coin = res[0].serial();
     let enc = (res[1].serial(), res[2].serial(),res[3].serial());
-    Ok((proof, coin, enc))
+    Ok((proof2str(proof), u6442str(coin), enc2str(enc)))
 }
 
 pub fn b2c_verify(
     va: [u64; 2],
-    coin: [u64; 4],
-    enc: ([u64; 4], [u64; 4],[u64; 4]),
-    proof: (([u64; 6], [u64; 6], bool),
-            (([u64; 6], [u64; 6]), ([u64; 6], [u64; 6]), bool),
-            ([u64; 6], [u64; 6], bool)),
+    coin: String,
+    enc: String,
+    proof: String,
 ) -> Result<bool, Error> {
+    let coin = str2u644(coin);
+    let enc = str2enc(enc);
+    let proof = str2proof(proof);
     verify_proof(&b2c_vk()?, &Proof::from_serial(proof), |cs| {
         let coin = Fr::from_repr(FrRepr::from_serial(coin)).unwrap();
         let va = Fr::from_repr(FrRepr([va[0], va[1], 0, 0])).unwrap();

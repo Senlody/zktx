@@ -20,8 +20,8 @@ fn test_b2c(samples:u32) {
 
     for _ in 0..samples {
         let rcm = [rng.gen(),rng.gen()];
-        let addr_sk = (0..ADSK).map(|_| rng.gen()).collect::<Vec<bool>>();
-        let addr = address(&addr_sk);
+        let addr_sk = zktx::sk2str((0..ADSK).map(|_| rng.gen()).collect::<Vec<bool>>());
+        let addr = address(addr_sk);
         let random:[u64;4] = [rng.gen(),rng.gen(),rng.gen(),rng.gen()];
         let va:[u64;2] = [10,0];
         let now = Instant::now();
@@ -55,7 +55,7 @@ fn test_c2b(samples:u32){
     for _ in 0..samples{
         let rng = &mut thread_rng();
         let rcm :[u64;2]= [rng.gen(),rng.gen()];
-        let addr_sk = (0..ADSK).map(|_| rng.gen()).collect::<Vec<bool>>();
+        let addr_sk = zktx::sk2str((0..ADSK).map(|_| rng.gen()).collect::<Vec<bool>>());
         let ba :[u64;2]= [1000,0];
         let va :[u64;2]= [10,0];
         let path = (0..TREEDEPTH).map(|_| {
@@ -100,7 +100,7 @@ fn test_c2p(samples:u32){
         //倒序：359=101100111 -> [1,1,1,0,0,1,1,0,1]
         let rng = &mut thread_rng();
         let rcm :[u64;2]= [rng.gen(),rng.gen()];
-        let addr_sk = (0..ADSK).map(|_| rng.gen()).collect::<Vec<bool>>();
+        let addr_sk = zktx::sk2str((0..ADSK).map(|_| rng.gen()).collect::<Vec<bool>>());
         let va :[u64;2]= [10,0];
         let path:Vec<String> = (0..TREEDEPTH).map(|_| {
             let mut v:[u64;4] = [0;4];
@@ -111,7 +111,7 @@ fn test_c2p(samples:u32){
         }).collect();
         let locs:Vec<bool> = (0..TREEDEPTH).map(|_| rng.gen()).collect::<Vec<bool>>();
         let coin = pedersen_hash({
-            let addr = zktx::str2point(address(&addr_sk)).0;
+            let addr = zktx::str2point(address(addr_sk.clone())).0;
             let mut v = Vec::with_capacity(256);
             for num in addr.into_iter(){
                 let mut num = *num;
@@ -189,8 +189,8 @@ fn test_p2c(samples:u32){
         let rng = &mut thread_rng();
         let rh:[u64;4] = [rng.gen(),rng.gen(),rng.gen(),0];
         let rcm :[u64;2]= [rng.gen(),rng.gen()];
-        let addr_sk = (0..ADSK).map(|_| rng.gen()).collect::<Vec<bool>>();
-        let addr = address(&addr_sk);
+        let addr_sk = zktx::sk2str((0..ADSK).map(|_| rng.gen()).collect::<Vec<bool>>());
+        let addr = address(addr_sk);
         let random:[u64;4] = [rng.gen(),rng.gen(),rng.gen(),rng.gen()];
         let ba :[u64;2]= [1000,0];
         let va :[u64;2]= [10,0];

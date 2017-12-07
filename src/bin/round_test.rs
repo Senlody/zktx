@@ -95,7 +95,7 @@ impl Account{
     pub fn send(&self,v:[u64;2],rcm:[u64;2],address:String)->(SendMessage,PrivateSendMessage){
         let rng = &mut thread_rng();
         let enc_random = [rng.gen(),rng.gen(),rng.gen(),rng.gen()];
-        let (proof,hb,coin,delt_ba,enc) = p2c_info(self.r,rcm,self.v,v,address.clone(),enc_random).unwrap();
+        let (proof,hb,coin,delt_ba,enc) = p2c_info(self.r,rcm,self.v,v,address.clone(),self.sk.clone(),enc_random).unwrap();
         assert_eq!(hb,self.get_balance());
         let enc1 = encrypt([rcm[0],rcm[1],v[0],v[1]],enc_random,address.clone());
         assert_eq!(enc,enc1);
@@ -162,13 +162,17 @@ impl Account{
         }
     }
 
+    pub fn check_coin(&self,coin:String,enc:String)->bool{
+        check(coin,enc,self.sk.clone())
+    }
+
     pub fn state_out(&self,name:&str){
         println!("{}: v = {:?}, r = {:?}",name,self.v,self.r);
     }
 }
 
 fn verify_send(message:&mut SendMessage,sender:&mut Account){
-    assert!(p2c_verify(sender.get_balance(),message.coin.clone(),message.delt_ba.clone(),message.enc.clone(),message.proof.clone()).unwrap());
+    assert!(p2c_verify(sender.get_balance(),message.coin.clone(),message.delt_ba.clone(),message.enc.clone(),sender.address.clone(),message.proof.clone()).unwrap());
     message.on_chain();
     sender.sub_balance(message.delt_ba.clone());
 }
@@ -189,6 +193,7 @@ fn round_test(){
     alice.send_refresh(&alice_private_send_message,&alice_send_message);
     alice.state_out("alice");
 
+    assert!(bob.check_coin(alice_send_message.coin.clone(),alice_send_message.enc.clone()));
     let (mut bob_receive_message,bob_private_receive_message) = bob.receive(alice_send_message);
     verify_receive(&mut bob_receive_message,&mut bob);
     bob.receive_refresh(&bob_private_receive_message,&bob_receive_message);
@@ -199,6 +204,7 @@ fn round_test(){
     bob.send_refresh(&bob_private_send_message,&bob_send_message);
     bob.state_out("bob");
 
+    assert!(alice.check_coin(bob_send_message.coin.clone(),bob_send_message.enc.clone()));
     let (mut alice_receive_message,alice_private_receive_message) = alice.receive(bob_send_message);
     verify_receive(&mut alice_receive_message,&mut alice);
     alice.receive_refresh(&alice_private_receive_message,&alice_receive_message);

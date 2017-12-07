@@ -20,19 +20,22 @@ fn test_b2c(samples:u32) {
 
     for _ in 0..samples {
         let rcm = [rng.gen(),rng.gen()];
-        let addr_sk = zktx::sk2str((0..ADSK).map(|_| rng.gen()).collect::<Vec<bool>>());
-        let addr = address(addr_sk);
+        //从addr0出钱给addr1
+        let addr_sk0 = zktx::sk2str((0..ADSK).map(|_| rng.gen()).collect::<Vec<bool>>());
+        let addr0 = address(addr_sk0.clone());
+        let addr_sk1 = zktx::sk2str((0..ADSK).map(|_| rng.gen()).collect::<Vec<bool>>());
+        let addr1 = address(addr_sk1.clone());
         let random:[u64;4] = [rng.gen(),rng.gen(),rng.gen(),rng.gen()];
         let va:[u64;2] = [10,0];
         let now = Instant::now();
-        let (proof, coin,enc) = b2c_info(rcm, va, addr,random).unwrap();
+        let (proof, coin,enc) = b2c_info(rcm, va, addr1,addr_sk0,random).unwrap();
 //        println!("H_B   = {:?}", bn);
 //        println!("coin  = {:?}", coin);
 //        println!("proof  = {:?}", proof);
         total += now.elapsed();
 
         let now = Instant::now();
-        let res = b2c_verify(va, coin, enc,proof).unwrap();
+        let res = b2c_verify(va, coin, enc,addr0,proof).unwrap();
         total2 += now.elapsed();
         assert!(res);
     }
@@ -253,7 +256,7 @@ fn test_range(){
 
 fn main(){
     test_range();
-//    test_b2c(10);
+    test_b2c(10);
     test_p2c(10);
     test_c2b(5);
     test_c2p(5);

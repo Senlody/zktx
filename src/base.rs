@@ -340,3 +340,9 @@ pub fn u644sub(num1: [u64; 4], num2: [u64; 4]) -> [u64; 4] {
     fr1.sub_assign(&fr2);
     fr1.into_repr().serial()
 }
+
+pub fn check(coin:String,enc:String,sk:String)->bool{
+    let (va,rcm) = decrypt(enc,sk.clone());
+    let coin2 = super::build_coin(address(sk),va,rcm);
+    coin2 == coin
+}
